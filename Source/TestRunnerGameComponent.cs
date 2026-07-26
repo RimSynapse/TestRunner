@@ -76,6 +76,7 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(LearningHelperCases.All());
                 cases.AddRange(CallbackCases.All());
                 cases.AddRange(ActionExecutorCases.All());
+                cases.AddRange(ScriptToolStepCases.All());
                 SynapseTestReporter.Info($"Running {cases.Count} case(s).");
                 SynapseTestRunner.RunAll(cases);
             }
