@@ -63,6 +63,17 @@ namespace RimSynapse.TestRunner
                 return $"all {all.Count} ConceptDefs safe for LessonAutoActivator";
             });
 
+            yield return new SynapseTestCase("Core_ModLoadedWithoutPatchFailure", () =>
+            {
+                // A Harmony prefix binds its arguments by parameter name, so a mismatch throws
+                // while patching. That propagates out of the Mod constructor and stops the whole
+                // mod loading, which is far worse than the bug being patched around. If Core's
+                // Mod instance is missing, its patches did not apply.
+                var mod = LoadedModManager.GetMod<RimSynapseMod>();
+                Assert.NotNull(mod, "RimSynapse.Core Mod instance missing — it likely threw while patching");
+                return "RimSynapse.Core instantiated and patched cleanly";
+            });
+
             yield return new SynapseTestCase("Core_WikiDefNamesAreValidIdentifiers", () =>
             {
                 var offenders = WikiConcepts()
