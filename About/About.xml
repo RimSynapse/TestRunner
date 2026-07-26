@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+    <name>RimSynapse - TestRunner (Dev)</name>
+    <author>RimSynapse Team</author>
+    <packageId>RimSynapse.TestRunner</packageId>
+    <url>https://github.com/RimSynapse/Core</url>
+    <modVersion>0.5.1</modVersion>
+    <supportedVersions>
+        <li>1.6</li>
+    </supportedVersions>
+    <modDependencies>
+        <li>
+            <packageId>RimSynapse.Core</packageId>
+            <displayName>RimSynapse - Core</displayName>
+            <downloadUrl>https://github.com/RimSynapse/Core/releases/latest</downloadUrl>
+            <steamWorkshopUrl>steam://url/CommunityFilePage/3760829776</steamWorkshopUrl>
+        </li>
+    </modDependencies>
+    <loadAfter>
+        <li>RimSynapse.Core</li>
+        <li>RimSynapse.RegionsAndTerritories</li>
+        <li>RimSynapse.Conversations</li>
+        <li>RimSynapse.Psychology</li>
+        <li>RimSynapse.WorldNews</li>
+        <li>RimSynapse.AuraAlgorithm</li>
+        <li>RimSynapse.NVIDIATool</li>
+        <li>RimSynapse.Factions</li>
+    </loadAfter>
+    <description>
+RimSynapse - TestRunner (Development Only)
+
+An automated test harness for the RimSynapse mod suite. This mod is intended for
+development and CI use only — it is not a gameplay mod and should not be enabled
+for normal play.
+
+When RimWorld is launched WITHOUT the -synapse-test command line argument, this mod
+does nothing at all: it registers no tools, patches nothing, and has no runtime cost
+beyond loading an idle GameComponent.
+
+When launched WITH -synapse-test, it waits for the game to finish loading, runs its
+test cases against the RimSynapse agent tool registry, writes results to the log in
+the form:
+
+    [SYNAPSE-TEST] PASS &lt;case&gt; | &lt;detail&gt;
+    [SYNAPSE-TEST] FAIL &lt;case&gt; | &lt;reason&gt;
+    [SYNAPSE-TEST] SUMMARY passed=N failed=M skipped=K
+
+and then shuts the game down so an automated runner sees a clean exit.
+
+Results are consumed by the RimSynapse harness (readlog.ps1 / the rimsynapse-mcp
+read_player_log and run_tests tools).
+
+It loads last so that every other RimSynapse mod has registered its tools before
+the tests execute.
+    </description>
+</ModMetaData>

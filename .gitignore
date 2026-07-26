@@ -1,0 +1,3 @@
+# Build intermediates (the built DLL in Assemblies/ IS committed, matching the other mods)
+Source/obj/
+Source/bin/
