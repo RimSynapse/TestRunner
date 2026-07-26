@@ -80,6 +80,7 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(AdaptiveTierCases.All());
                 cases.AddRange(AgentBudgetCases.All());
                 cases.AddRange(ToolSearchCases.All());
+                cases.AddRange(AgentControlCases.All());
                 SynapseTestReporter.Info($"Running {cases.Count} case(s).");
                 SynapseTestRunner.RunAll(cases);
             }
