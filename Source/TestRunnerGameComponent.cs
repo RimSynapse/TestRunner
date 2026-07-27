@@ -85,6 +85,7 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(DeadlineForecastCases.All());
                 cases.AddRange(EscalationCases.All());
                 cases.AddRange(ScriptValidationCases.All());
+                cases.AddRange(ScriptPersistenceCases.All());
                 SynapseTestReporter.Info($"Running {cases.Count} case(s).");
                 SynapseTestRunner.RunAll(cases);
             }
