@@ -22,6 +22,24 @@ namespace RimSynapse.TestRunner
     {
         public static IEnumerable<SynapseTestCase> All()
         {
+            yield return new SynapseTestCase("Core_AllModsInstantiated", () =>
+            {
+                // A binary-incompatible change in Core (e.g. altering a public method
+                // signature that companion DLLs bind to) surfaces as mod-instantiation or
+                // static-constructor failures at startup. The rest of the suite can stay
+                // green while entire mods are dead, so this failure mode needs its own name.
+                var failures = RecentLogLines()
+                    .Where(l => l.Contains("Error while instantiating a mod")
+                             || l.Contains("Error in static constructor"))
+                    .ToList();
+
+                Assert.True(failures.Count == 0,
+                    $"{failures.Count} mod(s) failed to initialise: " +
+                    string.Join(" | ", failures.Take(3).Select(Shorten)));
+
+                return "every mod instantiated cleanly";
+            });
+
             yield return new SynapseTestCase("Core_NoUnhandledQueueCallbackErrors", () =>
             {
                 var offenders = RecentLogLines()

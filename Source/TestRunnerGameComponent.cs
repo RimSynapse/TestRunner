@@ -75,6 +75,19 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(RegistryCases.All());
                 cases.AddRange(LearningHelperCases.All());
                 cases.AddRange(CallbackCases.All());
+                cases.AddRange(ActionExecutorCases.All());
+                cases.AddRange(ScriptToolStepCases.All());
+                cases.AddRange(AdaptiveTierCases.All());
+                cases.AddRange(AgentBudgetCases.All());
+                cases.AddRange(ToolSearchCases.All());
+                cases.AddRange(AgentControlCases.All());
+                cases.AddRange(PromptCases.All());
+                cases.AddRange(DeadlineForecastCases.All());
+                cases.AddRange(EscalationCases.All());
+                cases.AddRange(ScriptValidationCases.All());
+                cases.AddRange(ScriptPersistenceCases.All());
+                cases.AddRange(AgentInspectorCases.All());
+                cases.AddRange(PublicSurfaceCases.All());
                 SynapseTestReporter.Info($"Running {cases.Count} case(s).");
                 SynapseTestRunner.RunAll(cases);
             }
