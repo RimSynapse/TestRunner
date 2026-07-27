@@ -57,10 +57,17 @@ namespace RimSynapse.TestRunner
 
             yield return new SynapseTestCase("Core_ScriptCallToolNeedsToolName", () =>
             {
+                // Originally caught at execution time ("needs a 'tool' argument"); since the
+                // step schema landed, validation rejects it earlier with a named error.
+                // Either surface satisfies the contract: the missing field is reported and
+                // the step never executes.
                 var log = RunScript("call-tool-bad", Step("call_tool", new Dictionary<string, object>()));
-                Assert.True(log.Any(l => l.Contains("needs a 'tool' argument")),
-                    "expected a message about the missing tool argument, got: " + Join(log));
-                return "call_tool without a tool name is reported";
+                Assert.True(log.Any(l => l.Contains("missing required field 'tool'")
+                                      || l.Contains("needs a 'tool' argument")),
+                    "the missing tool name must be reported, got: " + Join(log));
+                Assert.False(log.Any(l => l.Contains("Executing step")),
+                    "a call_tool with no tool must not execute");
+                return "missing tool name reported before execution";
             });
 
             yield return new SynapseTestCase("Core_ScriptResultKeyReachesLog", () =>
