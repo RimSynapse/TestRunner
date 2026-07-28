@@ -16,5 +16,6 @@
         <HarmonyPath>$(SteamWorkshopPath)\2009463077\Current\Assemblies</HarmonyPath>
         <!-- RimSynapse Core — built locally -->
         <RimSynapseCoreAssembly>..\..\Core\Assemblies</RimSynapseCoreAssembly>
+        <RimSynapseRegionsAssembly>..\..\Regions-and-Territories\Assemblies</RimSynapseRegionsAssembly>
     </PropertyGroup>
 </Project>

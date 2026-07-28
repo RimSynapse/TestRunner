@@ -3,7 +3,7 @@
     <Import Project="GamePath.props" />
 
     <PropertyGroup>
-        <TargetFramework>net472</TargetFramework>
+        <TargetFramework>net48</TargetFramework>
         <AssemblyName>RimSynapseTestRunner</AssemblyName>
         <RootNamespace>RimSynapse.TestRunner</RootNamespace>
         <LangVersion>9.0</LangVersion>
@@ -43,6 +43,16 @@
         </Reference>
         <Reference Include="Newtonsoft.Json">
             <HintPath>$(RimSynapseCoreAssembly)\Newtonsoft.Json.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+
+        <!--
+            Regions and Territories: residency and dwelling generation are under test. R&T does not
+            reference Core and must keep working without it; the dependency runs one way, and this
+            mod loads last, so referencing it here is safe.
+        -->
+        <Reference Include="RimSynapseRegionsAndTerritories">
+            <HintPath>$(RimSynapseRegionsAssembly)\RimSynapseRegionsAndTerritories.dll</HintPath>
             <Private>false</Private>
         </Reference>
     </ItemGroup>
