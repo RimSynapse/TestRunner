@@ -95,6 +95,8 @@ namespace RimSynapse.TestRunner
                 // onto the live map. Nothing after it should assume an untouched colony.
                 cases.AddRange(ResidencyCases.All());
                 cases.AddRange(TerritorialOwnershipCases.All());
+                cases.AddRange(EmpireIntegrationCases.All());
+                cases.AddRange(AdapterProfileCases.All());
                 SynapseTestReporter.Info($"Running {cases.Count} case(s).");
                 SynapseTestRunner.RunAll(cases);
             }
