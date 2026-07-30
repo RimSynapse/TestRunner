@@ -72,6 +72,9 @@ namespace RimSynapse.TestRunner
             try
             {
                 var cases = new List<SynapseTestCase>();
+                // First: a mod killed by load order runs none of its own cases, and the rest of the
+                // suite stays green while it is dead. Report that before anything else.
+                cases.AddRange(LoadOrderCases.All());
                 cases.AddRange(RegistryCases.All());
                 cases.AddRange(LearningHelperCases.All());
                 cases.AddRange(CallbackCases.All());
