@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using RimSynapse.RegionsAndTerritories.Integration;
+using RimWorld.Planet;
 using Verse;
 
 namespace RimSynapse.TestRunner
@@ -50,11 +51,26 @@ namespace RimSynapse.TestRunner
                         .Where(t => t != null)
                         .ToList();
 
-                    // A profile for a mod that is not installed is not a defect — that is the whole
-                    // point of shipping profiles for mods the player may not have.
                     if (markers.Count == 0)
                     {
-                        observed.Add($"{p.displayName}: not installed");
+                        // Two very different states look identical here, and telling them apart is
+                        // the whole reason profiles now carry a packageId.
+                        //
+                        // Mod absent: correct and expected — profiles ship for mods the player may
+                        // not have. Mod present but no marker resolved: the marker names are wrong
+                        // and the adapter is inert, which is exactly how Vanilla Expanded Framework
+                        // went unnoticed after it renamed its assembly from VFECore to VEF (#31).
+                        if (IsModActive(p.packageId))
+                        {
+                            problems.Add($"{p.displayName}: mod {p.packageId} is ACTIVE but none of its markerTypes " +
+                                         $"[{string.Join(", ", p.markerTypes ?? new string[0])}] resolve — the adapter is " +
+                                         $"inert and every object of this mod falls through. Candidate world-object types " +
+                                         $"actually present: {SuggestWorldObjectTypes(p.packageId)}");
+                        }
+                        else
+                        {
+                            observed.Add($"{p.displayName}: not installed");
+                        }
                         continue;
                     }
                     present++;
@@ -96,6 +112,72 @@ namespace RimSynapse.TestRunner
                 // record #16 asks for, and it lands in Player.log on every run.
                 return $"{present} profiled mod(s) installed — {string.Join("; ", observed)}";
             });
+        }
+
+        private static bool IsModActive(string packageId)
+        {
+            if (string.IsNullOrEmpty(packageId)) return false;
+
+            // ModsConfig writes packageIds lowercased; profiles carry the author's casing.
+            var active = ModsConfig.ActiveModsInLoadOrder;
+            if (active == null) return false;
+
+            foreach (var m in active)
+            {
+                if (m?.PackageId != null &&
+                    m.PackageId.Equals(packageId, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// World-object types the named mod actually contributes, so a marker-resolution failure
+        /// carries its own fix rather than sending the reader back to a decompiler.
+        ///
+        /// <para>Only <see cref="WorldObject"/> subclasses are listed: those are the only types a
+        /// marker is useful for, and a large framework assembly holds thousands of others.</para>
+        /// </summary>
+        private static string SuggestWorldObjectTypes(string packageId)
+        {
+            try
+            {
+                foreach (var pack in LoadedModManager.RunningModsListForReading)
+                {
+                    if (pack?.PackageId == null ||
+                        !pack.PackageId.Equals(packageId, StringComparison.OrdinalIgnoreCase)) continue;
+
+                    var asms = pack.assemblies?.loadedAssemblies;
+                    if (asms == null) return "(mod contributes no loaded assembly)";
+
+                    var names = new List<string>();
+                    foreach (var asm in asms)
+                    {
+                        if (asm == null) continue;
+                        Type[] types;
+                        try { types = asm.GetTypes(); }
+                        catch (ReflectionTypeLoadException ex) { types = ex.Types ?? new Type[0]; }
+
+                        foreach (var t in types)
+                        {
+                            if (t == null || t.IsAbstract) continue;
+                            if (typeof(WorldObject).IsAssignableFrom(t)) names.Add(t.FullName);
+                        }
+                    }
+
+                    if (names.Count == 0) return "(none — this mod defines no WorldObject subclass)";
+                    names.Sort();
+                    return names.Count <= 8
+                        ? string.Join(", ", names)
+                        : string.Join(", ", names.Take(8)) + $", (+{names.Count - 8} more)";
+                }
+
+                return "(mod not found among running mods)";
+            }
+            catch (Exception ex)
+            {
+                return $"(could not enumerate: [{ex.GetType().Name}] {ex.Message})";
+            }
         }
 
         /// <summary>Which of <paramref name="names"/> exist as a field or property on any marker type.</summary>

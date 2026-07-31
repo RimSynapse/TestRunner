@@ -97,6 +97,7 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(TerritorialOwnershipCases.All());
                 cases.AddRange(EmpireIntegrationCases.All());
                 cases.AddRange(AdapterProfileCases.All());
+                cases.AddRange(AdapterScopeCases.All());
                 SynapseTestReporter.Info($"Running {cases.Count} case(s).");
                 SynapseTestRunner.RunAll(cases);
             }
