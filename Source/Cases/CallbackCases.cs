@@ -32,7 +32,7 @@ namespace RimSynapse.TestRunner
                 // This catches a mod that loaded and then threw. It does NOT catch a mod whose
                 // assembly never yielded its types — that mod's Mod subclass is never discovered,
                 // so it never fails to instantiate and neither string below appears. See
-                // Core_EveryModAssemblyYieldsTypes and Core_DeclaredLoadOrderRespected in
+                // Core_EveryShippedAssemblyIsLive and Core_DeclaredLoadOrderRespected in
                 // LoadOrderCases, added after Factions#42 slipped past this case entirely.
                 var failures = RecentLogLines()
                     .Where(l => l.Contains("Error while instantiating a mod")
