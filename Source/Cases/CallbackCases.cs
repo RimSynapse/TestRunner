@@ -28,6 +28,12 @@ namespace RimSynapse.TestRunner
                 // signature that companion DLLs bind to) surfaces as mod-instantiation or
                 // static-constructor failures at startup. The rest of the suite can stay
                 // green while entire mods are dead, so this failure mode needs its own name.
+                //
+                // This catches a mod that loaded and then threw. It does NOT catch a mod whose
+                // assembly never yielded its types — that mod's Mod subclass is never discovered,
+                // so it never fails to instantiate and neither string below appears. See
+                // Core_EveryModAssemblyYieldsTypes and Core_DeclaredLoadOrderRespected in
+                // LoadOrderCases, added after Factions#42 slipped past this case entirely.
                 var failures = RecentLogLines()
                     .Where(l => l.Contains("Error while instantiating a mod")
                              || l.Contains("Error in static constructor"))
