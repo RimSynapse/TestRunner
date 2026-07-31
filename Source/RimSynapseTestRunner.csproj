@@ -55,6 +55,17 @@
             <HintPath>$(RimSynapseRegionsAssembly)\RimSynapseRegionsAndTerritories.dll</HintPath>
             <Private>false</Private>
         </Reference>
+
+        <!--
+            Harmony: EmpireIntegrationCases asks Harmony.GetPatchInfo which owners are attached to
+            Empire's methods. A patch that never bound is indistinguishable from one that did unless
+            something asks Harmony itself, and log scraping is not a substitute — Log.Messages is a
+            bounded buffer.
+        -->
+        <Reference Include="0Harmony">
+            <HintPath>$(HarmonyPath)\0Harmony.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
     </ItemGroup>
 
     <!-- .NET Framework reference assemblies via NuGet: lets the build resolve net47x/net48
