@@ -57,6 +57,16 @@
         </Reference>
 
         <!--
+            Psychology: the daily-evaluation input split and lifetime-violence helpers (Stage 0 of the
+            0.7.1 memory/eval redesign) are under test. Psychology depends on Core, not the other way
+            round, and this mod loads last, so referencing it here keeps the one-way dependency intact.
+        -->
+        <Reference Include="RimSynapsePsychology">
+            <HintPath>$(RimSynapsePsychologyAssembly)\RimSynapsePsychology.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+
+        <!--
             Harmony: EmpireIntegrationCases asks Harmony.GetPatchInfo which owners are attached to
             Empire's methods. A patch that never bound is indistinguishable from one that did unless
             something asks Harmony itself, and log scraping is not a substitute — Log.Messages is a

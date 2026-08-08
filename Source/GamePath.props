@@ -17,5 +17,6 @@
         <!-- RimSynapse Core — built locally -->
         <RimSynapseCoreAssembly>..\..\Core\Assemblies</RimSynapseCoreAssembly>
         <RimSynapseRegionsAssembly>..\..\Regions-and-Territories\Assemblies</RimSynapseRegionsAssembly>
+        <RimSynapsePsychologyAssembly>..\..\Psychology\Assemblies</RimSynapsePsychologyAssembly>
     </PropertyGroup>
 </Project>

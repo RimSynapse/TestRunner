@@ -92,6 +92,8 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(ScriptPersistenceCases.All());
                 cases.AddRange(AgentInspectorCases.All());
                 cases.AddRange(PublicSurfaceCases.All());
+                cases.AddRange(ActivitySummaryCases.All());
+                cases.AddRange(PsychologyEvalCases.All());
                 // Last, because Regions_DwellingOccupantsAreResidents spawns buildings and pawns
                 // onto the live map. Nothing after it should assume an untouched colony.
                 cases.AddRange(ResidencyCases.All());
