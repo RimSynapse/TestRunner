@@ -17,15 +17,9 @@ namespace RimSynapse.TestRunner
     {
         private static SynapseTestCase Exec(string name, string polarity, string scenario, string expectation, Func<string> run)
             => new SynapseTestCase(name, run, null, "Execution", polarity, scenario, expectation);
-
-        // Determination specs run against a live model (Increment 2's async runner). Under -quicktest the
-        // LLM is mocked, so for now they report a SKIPPED detail (a PASS by the harness's count, rendered
-        // as SKIP in the report) carrying the recipe for the live run.
-        private static SynapseTestCase Determ(string name, string scenario, string expectation, string howToRunLive)
-            => new SynapseTestCase(
-                name,
-                () => "SKIPPED (live-required): " + howToRunLive,
-                null, "Determination", "positive", scenario, expectation);
+        // The Determination (upstream) tier is owned by DeterminationRunnerGameComponent, which runs it
+        // live (-synapse-determination) and writes that section of the report; the deterministic suite
+        // here contributes only the Execution tier.
 
         public static IEnumerable<SynapseTestCase> All()
         {
@@ -119,22 +113,6 @@ namespace RimSynapse.TestRunner
                     Assert.True(SynapseTraitPolicy.IsWhitelisted("Bloodlust"), "Bloodlust is a sanctioned shift");
                     return "whitelist enforced";
                 });
-
-            // ── Determination (upstream, live LLM — skipped under -quicktest) ──────────
-            yield return Determ("Determination_PodCarDoesNotWantBloodlust",
-                "Live eval of a colonist who spent the day attacking an object (the pod-car case).",
-                "PersonalityShiftLikelihood is none/low AND Bloodlust dailyPressure < 0.3.",
-                "seed object activity, run debug_run_evaluation, assert likelihood in {none,low} and Bloodlust dailyPressure < 0.3");
-
-            yield return Determ("Determination_RealKillingWantsBloodlust",
-                "Live eval of a colonist after a sustained streak of killing the living.",
-                "The eval assigns meaningful Bloodlust dailyPressure (>= 0.5).",
-                "seed living-kill history, run debug_run_evaluation, assert Bloodlust dailyPressure >= 0.5");
-
-            yield return Determ("Determination_MemoryWeightMatchesEventScale",
-                "Live memory generation for a minor vs a defining event.",
-                "Generated weight sits in a sane 0-1 tier for the event's scale.",
-                "run debug_generate_memory for a minor and a major event, assert weights ordered and within 0-1 tiers");
         }
     }
 }
