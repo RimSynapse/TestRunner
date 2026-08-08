@@ -18,5 +18,6 @@
         <RimSynapseCoreAssembly>..\..\Core\Assemblies</RimSynapseCoreAssembly>
         <RimSynapseRegionsAssembly>..\..\Regions-and-Territories\Assemblies</RimSynapseRegionsAssembly>
         <RimSynapsePsychologyAssembly>..\..\Psychology\Assemblies</RimSynapsePsychologyAssembly>
+        <RimSynapseConversationsAssembly>..\..\Conversations\Assemblies</RimSynapseConversationsAssembly>
     </PropertyGroup>
 </Project>

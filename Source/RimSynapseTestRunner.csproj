@@ -66,6 +66,12 @@
             <Private>false</Private>
         </Reference>
 
+        <!-- Conversations: the topic resolver, anti-repetition history, and pre-seed pool are under test. -->
+        <Reference Include="RimSynapseConversations">
+            <HintPath>$(RimSynapseConversationsAssembly)\RimSynapseConversations.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+
         <!--
             Harmony: EmpireIntegrationCases asks Harmony.GetPatchInfo which owners are attached to
             Empire's methods. A patch that never bound is indistinguishable from one that did unless
