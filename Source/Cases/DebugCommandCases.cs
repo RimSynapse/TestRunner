@@ -57,11 +57,24 @@ namespace RimSynapse.TestRunner
                 string[] names =
                 {
                     "debug_add_memory", "debug_dump_memories", "debug_run_memory_maintenance",
-                    "debug_generate_memory", "debug_run_evaluation"
+                    "debug_generate_memory", "debug_run_evaluation", "debug_judge"
                 };
                 foreach (var n in names)
                     Assert.True(SynapseToolRegistry.IsToolRegistered(n), $"{n} must be registered");
                 return $"{names.Length} debug tools registered";
+            });
+
+            // LLM-as-judge: the deterministic verdict parse (the live judgement is a playtest concern).
+            yield return new SynapseTestCase("Core_LlmJudgeParsesVerdict", () =>
+            {
+                var v = SynapseLlmJudge.Parse("{\"pass\": true, \"score\": 0.82, \"reasoning\": \"clearly meets the criteria\"}");
+                Assert.True(v.valid, "a well-formed verdict parses");
+                Assert.True(v.pass, "pass is read");
+                Assert.True(v.score > 0.81f && v.score < 0.83f, $"score is read (was {v.score})");
+                Assert.Contains(v.reasoning, "meets", "reasoning is read");
+                var bad = SynapseLlmJudge.Parse("this is not json");
+                Assert.False(bad.valid, "malformed judge output is marked invalid, not a false pass");
+                return $"score={v.score:0.00}, invalid-handled";
             });
         }
     }
