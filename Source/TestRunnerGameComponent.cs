@@ -108,6 +108,10 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(EmpireIntegrationCases.All());
                 cases.AddRange(AdapterProfileCases.All());
                 cases.AddRange(AdapterScopeCases.All());
+                // Read-only (no map mutation): the WorldNews→R&T availability seam.
+                cases.AddRange(WorldNewsBridgeCases.All());
+                // Read-only: the expanded NewspaperIssue model + parse path.
+                cases.AddRange(WorldNewsIssueModelCases.All());
                 SynapseTestReporter.Info($"Running {cases.Count} case(s).");
                 SynapseTestRunner.RunAll(cases);
             }

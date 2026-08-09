@@ -19,5 +19,6 @@
         <RimSynapseRegionsAssembly>..\..\Regions-and-Territories\Assemblies</RimSynapseRegionsAssembly>
         <RimSynapsePsychologyAssembly>..\..\Psychology\Assemblies</RimSynapsePsychologyAssembly>
         <RimSynapseConversationsAssembly>..\..\Conversations\Assemblies</RimSynapseConversationsAssembly>
+        <RimSynapseWorldNewsAssembly>..\..\WorldNews\Assemblies</RimSynapseWorldNewsAssembly>
     </PropertyGroup>
 </Project>
