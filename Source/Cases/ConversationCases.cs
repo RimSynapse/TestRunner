@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using RimWorld;
 using Verse;
 using RimSynapse.Comps;
 using RimSynapse.Models;
@@ -80,6 +81,57 @@ namespace RimSynapse.TestRunner
                 Assert.Equal(SynapseConversationsWorldComponent.MaxPreGenPerPair, wc.PoolTopicsForPair("P1", "P2").Count,
                     "pooled topics are distinct (selection diversifies them)");
                 return $"pair pool={wc.PoolCountForPair("P1", "P2")}, distinct topics={wc.PoolTopicsForPair("P1", "P2").Count}";
+            });
+
+            // Read-only agent tools (Conversations#10): get_chat_history filters to the named colonist,
+            // is newest-first, honors maxMessages; get_colonist_interests returns valid JSON; unknown
+            // pawn returns an error payload rather than throwing.
+            yield return new SynapseTestCase("Conversations_HistoryAndInterests", () =>
+            {
+                Assert.True(SynapseToolRegistry.IsToolRegistered("get_chat_history"), "get_chat_history is registered");
+                Assert.True(SynapseToolRegistry.IsToolRegistered("get_colonist_interests"), "get_colonist_interests is registered");
+
+                Map map = Find.CurrentMap ?? Find.Maps.FirstOrDefault();
+                Assert.True(map != null, "no map available");
+                var pawn = map.mapPawns.FreeColonists.FirstOrDefault();
+                Assert.True(pawn != null, "no colonist available");
+                var other = map.mapPawns.FreeColonists.FirstOrDefault(p => p != pawn) ?? pawn;
+
+                var wc = Find.World.GetComponent<SynapseConversationsWorldComponent>();
+                Assert.True(wc != null, "no conversations world component");
+
+                var conv = new PawnConversation(pawn.ThingID, other.ThingID, 200);
+                conv.messages.Add(new SynapseConversationMessage(pawn.ThingID, "older hello", 100));
+                conv.messages.Add(new SynapseConversationMessage(other.ThingID, "newer reply", 200));
+                wc.pawnConversations.Add(conv);
+                try
+                {
+                    string name = pawn.LabelShort;
+                    string argsJson = "{\"pawnName\": \"" + name + "\"}";
+
+                    string hist = SynapseToolRegistry.ExecuteTool("get_chat_history", argsJson, false);
+                    Assert.Contains(hist, "older hello", "history includes the seeded initiator message");
+                    Assert.Contains(hist, "newer reply", "history includes the seeded reply");
+                    Assert.True(hist.IndexOf("newer reply") < hist.IndexOf("older hello"), "history is newest-first");
+
+                    string capped = SynapseToolRegistry.ExecuteTool("get_chat_history",
+                        "{\"pawnName\": \"" + name + "\", \"maxMessages\": 1}", false);
+                    Assert.Contains(capped, "newer reply", "capped history keeps the newest message");
+                    Assert.DoesNotContain(capped, "older hello", "maxMessages caps the older message out");
+
+                    string interests = SynapseToolRegistry.ExecuteTool("get_colonist_interests", argsJson, false);
+                    Assert.Contains(interests, "interests", "interests payload has an interests field");
+
+                    string missing = SynapseToolRegistry.ExecuteTool("get_chat_history",
+                        "{\"pawnName\": \"NoSuchPawn_zzz\"}", false);
+                    Assert.Contains(missing, "error", "unknown pawn returns an error payload");
+
+                    return $"history newest-first + capped + interests + error-path ok for {name}";
+                }
+                finally
+                {
+                    wc.pawnConversations.Remove(conv);
+                }
             });
         }
     }
