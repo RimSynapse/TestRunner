@@ -61,51 +61,49 @@ namespace RimSynapse.TestRunner
             yield return new SynapseTestCase("Regions_DwellingOccupantsAreResidents", () =>
             {
                 Map map = Find.CurrentMap ?? Find.Maps.FirstOrDefault();
-                Assert.True(map != null, "no map available to generate dwellings on");
+                Assert.True(map != null, "no map available to spawn a dwelling occupant on");
 
-                var before = new HashSet<Pawn>(map.mapPawns.AllPawns);
-                List<Pawn> spawned = null;
+                // Deterministic seam (#29). The old case ran the full DwellingStructureGenerator.Generate,
+                // whose random placement search and per-dwelling 66% spawn chance meant ~4% of runs
+                // spawned nobody — and a constrained map could place no dwellings at all — so the
+                // "spawned > 0" assert failed intermittently with no bug behind it. This spawns one
+                // occupant through the same SetResident write path Generate uses, at a cell we pick,
+                // so the marking and provider round-trip are what is under test, not the RNG.
+                IntVec3 cell = IntVec3.Invalid;
+                for (int i = 0; i < 500; i++)
+                {
+                    IntVec3 c = CellFinder.RandomCell(map);
+                    if (c.Standable(map) && !c.Fogged(map)) { cell = c; break; }
+                }
+                if (cell == IntVec3.Invalid) cell = map.Center;
 
+                Pawn pawn = null;
                 try
                 {
-                    // The real write path. Generate spawns dwellings and their occupants exactly as
-                    // it does during settlement map generation, and marks each occupant resident.
-                    DwellingStructureGenerator.Generate(map, 3);
+                    pawn = DwellingStructureGenerator.SpawnResidentForTesting(map, cell);
 
-                    spawned = map.mapPawns.AllPawns
-                        .Where(p => !before.Contains(p) && p.RaceProps != null && p.RaceProps.Humanlike)
-                        .ToList();
+                    Assert.True(pawn != null && pawn.RaceProps != null && pawn.RaceProps.Humanlike,
+                        "the dwelling-resident write path did not spawn a humanlike pawn");
+                    Assert.True(!pawn.Destroyed && pawn.Spawned,
+                        "the generated occupant did not actually spawn on the map");
 
-                    Assert.True(spawned.Count > 0,
-                        "dwelling generation spawned no humanlike pawns, so the write path was not exercised");
+                    // The write path must mark its occupant a resident...
+                    Assert.True(ResidencyUtility.IsResident(pawn),
+                        "a generated dwelling occupant was not marked resident");
 
-                    var residents = spawned.Where(p => ResidencyUtility.IsResident(p)).ToList();
-                    Assert.True(residents.Count == spawned.Count,
-                        $"expected all {spawned.Count} generated occupant(s) to be residents, got {residents.Count}");
+                    // ...and Core must reach the same answer through the provider it never holds a
+                    // reference to. If registration silently failed, this is where it shows.
+                    Assert.True(SynapseCoreProviders.IsResident(pawn),
+                        "Core's provider disagrees: the generated occupant does not read as resident through Core");
 
-                    // The whole point of the provider: Core must reach the same answer without
-                    // knowing anything about R&T. If registration silently failed, this is where it
-                    // shows.
-                    var viaCore = spawned.Where(p => SynapseCoreProviders.IsResident(p)).ToList();
-                    Assert.True(viaCore.Count == spawned.Count,
-                        $"Core's provider saw {viaCore.Count} of {spawned.Count} residents; R&T and Core disagree");
-
-                    return $"{spawned.Count} generated occupant(s) resident, and Core agrees via the provider";
+                    return "generated dwelling occupant is resident, and Core agrees via the provider";
                 }
                 finally
                 {
-                    // Restore what we touched, per the case conventions. The pawns are what later
-                    // cases could trip over — a colony that suddenly contains outlanders. The
-                    // structures Generate also places are left: they are inert scenery, removing
-                    // them means reversing terrain and roof changes too, and the suite shuts the
-                    // game down immediately after. Say so rather than implying a full rollback.
-                    if (spawned != null)
-                    {
-                        foreach (var p in spawned)
-                        {
-                            if (p != null && !p.Destroyed) p.Destroy(DestroyMode.Vanish);
-                        }
-                    }
+                    // Restore what we touched: the pawn (and its one-member defend lord, which
+                    // disposes itself once empty). A stray outlander is exactly what a later case
+                    // could trip over.
+                    if (pawn != null && !pawn.Destroyed) pawn.Destroy(DestroyMode.Vanish);
                 }
             });
 
