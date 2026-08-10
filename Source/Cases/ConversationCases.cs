@@ -5,6 +5,7 @@ using Verse;
 using RimSynapse.Comps;
 using RimSynapse.Models;
 using RimSynapse.Conversations;
+using RimSynapse.Conversations.Patches;
 using RimSynapse.Psychology.Comps;
 
 namespace RimSynapse.TestRunner
@@ -303,6 +304,37 @@ namespace RimSynapse.TestRunner
                 Assert.False(wc2.TryDequeuePastEvent(out _), "a lone settled trivial is dropped by the significance floor");
                 Assert.Equal(0, wc2.BacklogCount, "dropped trivial is removed from the backlog");
                 return "settle withholds then releases; floor drops lone trivial";
+            });
+
+            // Event-driven topic selection (#34): recent EventReflection memories become topics;
+            // deep talk takes the weightiest, chit-chat an EventReflection, avoid-set excludes, and a
+            // pawn with no event memories yields none.
+            yield return new SynapseTestCase("Conversations_EventTopicSelection", () =>
+            {
+                long now = Find.TickManager != null ? Find.TickManager.TicksAbs : 100000L;
+                var core = new SynapseCorePawnComp();
+                var crow = new WeightedMemory { summary = "clawed by a crow", memoryType = "EventReflection", weight = 0.4f, baseWeight = 0.4f, absTick = now - 100 };
+                core.AddMemory(crow);
+                var death = new WeightedMemory { summary = "watched a friend die", memoryType = "EventReflection", weight = 0.9f, baseWeight = 0.9f, absTick = now - 500000, isLongTerm = true };
+                core.AddMemory(death); death.isLongTerm = true; death.salience = 2f;
+                core.AddMemory(new WeightedMemory { summary = "idle chatter", memoryType = "social", weight = 0.2f, baseWeight = 0.2f, absTick = now - 50 });
+
+                var deep = Patch_Pawn_InteractionsTracker_TryInteractWith.SelectEventMemoryCandidate(core, true, null);
+                Assert.True(deep != null && deep.summary.Contains("friend die"), "deep talk picks the weightiest event");
+
+                var chit = Patch_Pawn_InteractionsTracker_TryInteractWith.SelectEventMemoryCandidate(core, false, null);
+                Assert.True(chit != null && chit.memoryType == "EventReflection", "chit-chat picks an EventReflection event");
+
+                var avoid = new HashSet<string> { "event:" + (deep.memId ?? deep.summary) };
+                var deep2 = Patch_Pawn_InteractionsTracker_TryInteractWith.SelectEventMemoryCandidate(core, true, avoid);
+                Assert.True(deep2 != deep, "the avoid set excludes the just-told event");
+
+                var core2 = new SynapseCorePawnComp();
+                core2.AddMemory(new WeightedMemory { summary = "just chatting", memoryType = "social", weight = 0.2f, baseWeight = 0.2f, absTick = now });
+                Assert.True(Patch_Pawn_InteractionsTracker_TryInteractWith.SelectEventMemoryCandidate(core2, false, null) == null,
+                    "a pawn with no EventReflection memories yields no event topic");
+
+                return $"deep=\"{deep.summary}\", chit=\"{chit.summary}\", avoid excluded";
             });
         }
     }
