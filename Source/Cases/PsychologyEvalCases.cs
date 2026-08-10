@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using RimWorld;
 using RimSynapse.Models;
 using RimSynapse.Psychology.API;
 
@@ -47,6 +49,30 @@ namespace RimSynapse.TestRunner
                 Assert.Contains(desc, "5 animal", "animal kills must be stated");
                 Assert.Contains(desc, "8 living", "living total must be stated");
                 return desc;
+            });
+
+            // Clinical-review eligibility (#39): colonists are eligible; null/ineligible are not.
+            yield return new SynapseTestCase("Psychology_ReviewEligibility", () =>
+            {
+                Assert.False(SynapsePsychology.IsEligibleForReview(null), "null is never eligible");
+
+                var map = Verse.Find.CurrentMap ?? Verse.Find.Maps.FirstOrDefault();
+                Assert.True(map != null, "no map available");
+                var colonists = map.mapPawns.FreeColonists.ToList();
+                Assert.True(colonists.Count > 0, "expected at least one colonist");
+                foreach (var c in colonists)
+                    Assert.True(SynapsePsychology.IsEligibleForReview(c), $"{c.LabelShort} (colonist) should be eligible");
+
+                // Any non-colony humanlike on the map (visitor/enemy) must NOT be eligible.
+                int ineligible = 0;
+                foreach (var p in map.mapPawns.AllPawnsSpawned)
+                {
+                    if (!p.RaceProps.Humanlike || p.Dead) continue;
+                    if (p.IsColonist || p.IsPrisonerOfColony || p.IsSlaveOfColony || p.IsQuestLodger()) continue;
+                    Assert.False(SynapsePsychology.IsEligibleForReview(p), $"{p.LabelShort} (non-affiliate) must not be eligible");
+                    ineligible++;
+                }
+                return $"{colonists.Count} colonist(s) eligible; {ineligible} non-affiliate(s) excluded";
             });
         }
     }
