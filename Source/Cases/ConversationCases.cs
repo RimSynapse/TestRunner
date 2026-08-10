@@ -5,6 +5,7 @@ using Verse;
 using RimSynapse.Comps;
 using RimSynapse.Models;
 using RimSynapse.Conversations;
+using RimSynapse.Psychology.Comps;
 
 namespace RimSynapse.TestRunner
 {
@@ -187,6 +188,69 @@ namespace RimSynapse.TestRunner
                 Assert.Contains(SynapseToolRegistry.ExecuteTool("trigger_mood_booster", "{}", true), "error", "empty args -> error");
 
                 return $"gate-refused + boost(+{after - before}) + cooldown + clamp + error-paths ok for {name}";
+            });
+
+            // Kokoro voice catalog (Conversations#33): gender-appropriate, stable, known ids.
+            yield return new SynapseTestCase("Core_KokoroVoiceCatalog", () =>
+            {
+                Assert.True(KokoroVoices.EnglishMale.Length > 0 && KokoroVoices.EnglishFemale.Length > 0, "catalog populated");
+                Assert.True(KokoroVoices.IsKnown("am_michael") && KokoroVoices.IsKnown("af_bella"), "known ids recognized");
+                Assert.False(KokoroVoices.IsKnown("zz_nobody"), "unknown id rejected");
+                Assert.False(KokoroVoices.EnglishFemale.Contains("am_michael"), "pools are gender-separated");
+
+                Map map = Find.CurrentMap ?? Find.Maps.FirstOrDefault();
+                Assert.True(map != null, "no map available");
+                var p = map.mapPawns.FreeColonists.FirstOrDefault();
+                Assert.True(p != null, "no colonist available");
+
+                string v1 = KokoroVoices.RandomVoiceFor(p);
+                Assert.True(KokoroVoices.IsKnown(v1), "assigned voice is a known id");
+                Assert.True(KokoroVoices.PoolFor(p).Contains(v1), "assigned voice is gender-appropriate");
+                Assert.Equal(v1, KokoroVoices.RandomVoiceFor(p), "voice is stable for a given pawn");
+                return $"catalog M={KokoroVoices.EnglishMale.Length} F={KokoroVoices.EnglishFemale.Length}; {p.LabelShort}->{v1}";
+            });
+
+            // Voice mapping (Conversations#33): pace->speed, timbre->blend, base-voice assignment.
+            yield return new SynapseTestCase("Psychology_VoiceProfileMapping", () =>
+            {
+                Assert.True(System.Math.Abs(VoiceProfileBuilder.SpeedFromPace("fast") - 1.15f) < 0.001f, "fast pace");
+                Assert.True(System.Math.Abs(VoiceProfileBuilder.SpeedFromPace("slow") - 0.9f) < 0.001f, "slow pace");
+                Assert.True(System.Math.Abs(VoiceProfileBuilder.SpeedFromPace("measured") - 1f) < 0.001f, "measured pace");
+
+                Map map = Find.CurrentMap ?? Find.Maps.FirstOrDefault();
+                Assert.True(map != null, "no map available");
+                var p = map.mapPawns.FreeColonists.FirstOrDefault();
+                Assert.True(p != null, "no colonist available");
+                var core = p.TryGetComp<SynapseCorePawnComp>();
+                Assert.True(core != null, "no core comp");
+
+                string sVoice = core.voiceProfile, sKok = core.kokoroVoice, sBlend = core.kokoroBlendVoice;
+                float sSpeed = core.kokoroSpeed, sW = core.kokoroBlendWeight; bool sGen = core.voiceGenerated;
+                try
+                {
+                    // Fix a base voice that is neither a firmer nor softer reference, so gruff must blend.
+                    core.kokoroVoice = p.gender == Gender.Male ? "am_adam" : "af_bella";
+                    core.voiceProfile = null; core.voiceGenerated = false;
+
+                    VoiceProfileBuilder.ApplyVoiceProfile(p, core, "Terse and dry.", "fast", "gruff");
+                    Assert.Equal("Terse and dry.", core.voiceProfile, "style stored");
+                    Assert.True(KokoroVoices.IsKnown(core.kokoroVoice), "base voice is a known id");
+                    Assert.True(System.Math.Abs(core.kokoroSpeed - 1.15f) < 0.001f, "fast -> 1.15 speed");
+                    Assert.True(core.kokoroBlendWeight > 0f && KokoroVoices.IsKnown(core.kokoroBlendVoice)
+                        && core.kokoroBlendVoice != core.kokoroVoice, "gruff -> valid non-self blend");
+                    Assert.True(core.voiceGenerated, "voiceGenerated set");
+
+                    VoiceProfileBuilder.ApplyVoiceProfile(p, core, null, "slow", "flat");
+                    Assert.True(System.Math.Abs(core.kokoroSpeed - 0.9f) < 0.001f, "slow -> 0.9 speed");
+                    Assert.True(core.kokoroBlendWeight == 0f && string.IsNullOrEmpty(core.kokoroBlendVoice), "flat -> no blend");
+                    Assert.Equal("Terse and dry.", core.voiceProfile, "null style preserves prior style");
+                    return $"speed/blend mapping ok; base={core.kokoroVoice}";
+                }
+                finally
+                {
+                    core.voiceProfile = sVoice; core.kokoroVoice = sKok; core.kokoroBlendVoice = sBlend;
+                    core.kokoroSpeed = sSpeed; core.kokoroBlendWeight = sW; core.voiceGenerated = sGen;
+                }
             });
         }
     }
