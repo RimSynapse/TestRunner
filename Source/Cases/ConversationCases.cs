@@ -133,6 +133,61 @@ namespace RimSynapse.TestRunner
                     wc.pawnConversations.Remove(conv);
                 }
             });
+
+            // Universe action tools (Conversations#4): mutating-flag gate, apply-once + cooldown, clamp,
+            // and error-paths for the mood/relationship/inspiration tools.
+            yield return new SynapseTestCase("Conversations_UniverseActions", () =>
+            {
+                Assert.True(SynapseToolRegistry.IsToolRegistered("trigger_mood_booster"), "trigger_mood_booster registered");
+                Assert.True(SynapseToolRegistry.IsToolRegistered("trigger_relationship_shift"), "trigger_relationship_shift registered");
+                Assert.True(SynapseToolRegistry.IsToolRegistered("inspire_colonist"), "inspire_colonist registered");
+
+                // Flagged mutating: a gated run (allowMutating:false) must refuse them before the handler.
+                string gated = SynapseToolRegistry.ExecuteTool("trigger_mood_booster",
+                    "{\"pawnName\":\"x\",\"effectType\":\"boost\",\"reason\":\"t\"}", false);
+                Assert.Contains(gated, "not permitted to mutate", "mutating tool refused when gating disallows mutation");
+
+                Map map = Find.CurrentMap ?? Find.Maps.FirstOrDefault();
+                Assert.True(map != null, "no map available");
+                var colonists = map.mapPawns.FreeColonists.ToList();
+                Assert.True(colonists.Count >= 1, "need at least one colonist");
+                var pawn = colonists[0];
+                string name = pawn.LabelShort;
+
+                System.Func<int> countKind = () =>
+                    pawn.needs?.mood?.thoughts?.memories?.Memories?.Count(m => m.def.defName == "KindWordsMood") ?? 0;
+                int before = countKind();
+
+                string boost = SynapseToolRegistry.ExecuteTool("trigger_mood_booster",
+                    "{\"pawnName\":\"" + name + "\",\"effectType\":\"boost\",\"reason\":\"good talk\"}", true);
+                Assert.Contains(boost, "success", "valid boost reports success");
+                int after = countKind();
+                Assert.True(after > before, "boost added a KindWordsMood memory");
+
+                // Cooldown: an immediate second call is a no-op error; the memory count does not change.
+                string second = SynapseToolRegistry.ExecuteTool("trigger_mood_booster",
+                    "{\"pawnName\":\"" + name + "\",\"effectType\":\"boost\",\"reason\":\"again\"}", true);
+                Assert.Contains(second, "cooldown", "second boost within the window is a cooldown no-op");
+                Assert.Equal(after, countKind(), "cooldown call added no further memory");
+
+                // Out-of-range shiftAmount is clamped, not rejected-with-throw.
+                if (colonists.Count >= 2)
+                {
+                    string shift = SynapseToolRegistry.ExecuteTool("trigger_relationship_shift",
+                        "{\"speakerName\":\"" + name + "\",\"recipientName\":\"" + colonists[1].LabelShort + "\",\"shiftAmount\":999,\"reason\":\"clamp\"}", true);
+                    Assert.DoesNotContain(shift, "Exception during tool execution", "out-of-range shiftAmount is clamped, not thrown");
+                    Assert.Contains(shift, "success", "clamped relationship shift applies (RapportBuilt path)");
+                }
+
+                // Error paths return structured JSON without throwing.
+                Assert.Contains(SynapseToolRegistry.ExecuteTool("inspire_colonist",
+                    "{\"pawnName\":\"NoSuchPawn_zzz\",\"inspirationType\":\"frenzy\"}", true), "error", "unknown pawn -> error");
+                Assert.Contains(SynapseToolRegistry.ExecuteTool("inspire_colonist",
+                    "{\"pawnName\":\"" + name + "\",\"inspirationType\":\"not_a_type\"}", true), "error", "bad enum -> error");
+                Assert.Contains(SynapseToolRegistry.ExecuteTool("trigger_mood_booster", "{}", true), "error", "empty args -> error");
+
+                return $"gate-refused + boost(+{after - before}) + cooldown + clamp + error-paths ok for {name}";
+            });
         }
     }
 }
