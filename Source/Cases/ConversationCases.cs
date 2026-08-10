@@ -252,6 +252,58 @@ namespace RimSynapse.TestRunner
                     core.kokoroSpeed = sSpeed; core.kokoroBlendWeight = sW; core.voiceGenerated = sGen;
                 }
             });
+
+            // Episode coalescing (Core#88): trivial repeats of one ordeal roll up; serious stays distinct.
+            yield return new SynapseTestCase("Core_EpisodeCoalescing", () =>
+            {
+                var wc = new SynapseCoreWorldComponent(Find.World);
+                for (int i = 0; i < 5; i++)
+                    wc.EnqueuePastEvent(new PastEvent
+                    {
+                        mcpTag = "Injury(TestPawn vs a crow)", category = "ColonistInjured",
+                        severity = EventSeverity.Trivial, eventDescription = "clawed",
+                        involvedPawnIds = new List<string> { "T1" }
+                    });
+                Assert.Equal(1, wc.BacklogCount, "5 trivial same-key wounds coalesce to one episode");
+                var ep = wc.AllEvents.First();
+                Assert.Equal(5, ep.occurrenceCount, "occurrenceCount rolled up to 5");
+
+                wc.EnqueuePastEvent(new PastEvent
+                {
+                    mcpTag = "Injury(TestPawn vs a crow)", category = "ColonistInjured",
+                    severity = EventSeverity.Serious, eventDescription = "mauled",
+                    involvedPawnIds = new List<string> { "T1" }
+                });
+                Assert.Equal(2, wc.BacklogCount, "a serious wound stays a distinct entry (not coalesced)");
+                return $"coalesced 5->1 (count {ep.occurrenceCount}) + 1 serious distinct";
+            });
+
+            // Settling + significance floor (Core#88): unsettled withheld; lone trivial dropped.
+            yield return new SynapseTestCase("Core_EpisodeSettleAndFloor", () =>
+            {
+                int now = Find.TickManager.TicksGame;
+
+                var wc = new SynapseCoreWorldComponent(Find.World);
+                wc.EnqueuePastEvent(new PastEvent
+                {
+                    mcpTag = "Raid(Alpha)", severity = EventSeverity.Standard,
+                    eventDescription = "raid", involvedPawnIds = new List<string> { "T1" }
+                });
+                Assert.False(wc.TryDequeuePastEvent(out _), "a fresh (unsettled) episode is withheld");
+                wc.AllEvents.First().lastUpdateTick = now - 5000;   // force settled
+                Assert.True(wc.TryDequeuePastEvent(out var got) && got != null, "a settled episode is returned");
+
+                var wc2 = new SynapseCoreWorldComponent(Find.World);
+                wc2.EnqueuePastEvent(new PastEvent
+                {
+                    mcpTag = "Injury(TestPawn vs a rat)", severity = EventSeverity.Trivial,
+                    eventDescription = "nip", involvedPawnIds = new List<string> { "T1" }
+                });
+                wc2.AllEvents.First().lastUpdateTick = now - 5000;
+                Assert.False(wc2.TryDequeuePastEvent(out _), "a lone settled trivial is dropped by the significance floor");
+                Assert.Equal(0, wc2.BacklogCount, "dropped trivial is removed from the backlog");
+                return "settle withholds then releases; floor drops lone trivial";
+            });
         }
     }
 }
