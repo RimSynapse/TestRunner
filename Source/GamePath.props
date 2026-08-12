@@ -17,6 +17,7 @@
         <!-- RimSynapse Core — built locally -->
         <RimSynapseCoreAssembly>..\..\Core\Assemblies</RimSynapseCoreAssembly>
         <RimSynapseRegionsAssembly>..\..\Regions-and-Territories\Assemblies</RimSynapseRegionsAssembly>
+        <RimSynapseLivingWorldAssembly>..\..\LivingWorld\Assemblies</RimSynapseLivingWorldAssembly>
         <RimSynapsePsychologyAssembly>..\..\Psychology\Assemblies</RimSynapsePsychologyAssembly>
         <RimSynapseConversationsAssembly>..\..\Conversations\Assemblies</RimSynapseConversationsAssembly>
         <RimSynapseWorldNewsAssembly>..\..\WorldNews\Assemblies</RimSynapseWorldNewsAssembly>

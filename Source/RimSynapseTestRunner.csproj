@@ -47,12 +47,22 @@
         </Reference>
 
         <!--
-            Regions and Territories: residency and dwelling generation are under test. R&T does not
-            reference Core and must keep working without it; the dependency runs one way, and this
-            mod loads last, so referencing it here is safe.
+            Regions and Territories: its world-object adapters and territorial-ownership rules are
+            under test. R&T does not reference Core and must keep working without it; the dependency
+            runs one way, and this mod loads last, so referencing it here is safe.
         -->
         <Reference Include="RimSynapseRegionsAndTerritories">
             <HintPath>$(RimSynapseRegionsAssembly)\RimSynapseRegionsAndTerritories.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+
+        <!--
+            Living World: residency and dwelling generation moved here from R&T (0.8) and are under
+            test. Living World references nothing (standalone), and this mod loads last, so the
+            reference is safe.
+        -->
+        <Reference Include="RimSynapseLivingWorld">
+            <HintPath>$(RimSynapseLivingWorldAssembly)\RimSynapseLivingWorld.dll</HintPath>
             <Private>false</Private>
         </Reference>
 

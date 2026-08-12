@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using RimSynapse.RegionsAndTerritories;
-using RimSynapse.RegionsAndTerritories.Residency;
+using RimSynapse.LivingWorld;
+using RimSynapse.LivingWorld.Residency;
 using RimWorld;
 using Verse;
 
