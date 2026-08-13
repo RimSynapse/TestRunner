@@ -98,6 +98,7 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(TraitEngineCases.All());
                 cases.AddRange(SkillAxisCases.All());
                 cases.AddRange(SettingsWiringCases.All());
+                cases.AddRange(CompatRegistryCases.All());
                 cases.AddRange(StandaloneBugCases.All());
                 cases.AddRange(DebugCommandCases.All());
                 cases.AddRange(RedesignScenarioCases.All());
