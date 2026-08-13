@@ -82,7 +82,17 @@ namespace RimSynapse.TestRunner
         public static void Equal(object expected, object actual, string message)
         {
             if (!Equals(expected, actual))
-                throw new SynapseTestFailure($"{message} (expected '{expected}', got '{actual}')");
+            {
+                string es = expected?.ToString() ?? "null";
+                string as_ = actual?.ToString() ?? "null";
+                // When the two render identically the plain message is unreadable ("expected '0',
+                // got '0'"). That happens when the boxed types differ (e.g. float 0f vs int 0),
+                // so surface the runtime types to make the real mismatch legible.
+                string typeHint = es == as_
+                    ? $" [types: {expected?.GetType().Name ?? "null"} vs {actual?.GetType().Name ?? "null"}]"
+                    : "";
+                throw new SynapseTestFailure($"{message} (expected '{es}', got '{as_}'){typeHint}");
+            }
         }
 
         public static void Contains(string haystack, string needle, string message)

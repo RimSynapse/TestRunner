@@ -36,7 +36,9 @@ namespace RimSynapse.TestRunner
                 int? deeper = TraitAxis.AdjacentMinus(mood, minus.Value);
                 Assert.True(deeper.HasValue && deeper.Value < minus.Value, "a further - step goes to the deeper negative degree");
                 int? back = TraitAxis.AdjacentPlus(mood, minus.Value);
-                Assert.Equal(0f, back ?? -99, "a + step from the first negative degree returns to neutral");
+                // Degrees are ints; compare against an int 0, not a float 0f — a boxed float
+                // never Equals a boxed int, and both render "0", which masks the mismatch.
+                Assert.Equal(0, back ?? -99, "a + step from the first negative degree returns to neutral");
                 return $"reach=[{string.Join(",", reach)}] plus={plus} minus={minus}";
             });
 
