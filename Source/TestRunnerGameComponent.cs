@@ -101,6 +101,7 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(CompatRegistryCases.All());
                 cases.AddRange(PsychologyContextHookCases.All());
                 cases.AddRange(PivotalMemoryCases.All());
+                cases.AddRange(ArrivalMemoryContractCases.All());
                 cases.AddRange(StandaloneBugCases.All());
                 cases.AddRange(DebugCommandCases.All());
                 cases.AddRange(RedesignScenarioCases.All());
