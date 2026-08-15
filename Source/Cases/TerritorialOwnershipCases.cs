@@ -92,7 +92,13 @@ namespace RimSynapse.TestRunner
                 {
                     var faction = Find.FactionManager.AllFactions
                         .FirstOrDefault(f => !f.def.isPlayer && !f.Hidden);
-                    Assert.True(faction != null, "no non-player faction to evaluate against");
+                    // A minimal quicktest world can generate with no non-player faction. That is a
+                    // world-gen limitation, not a placement defect — self-skip rather than fail (the
+                    // env-defensive rule), consistent with the other SKIPPED branches in this case.
+                    if (faction == null)
+                    {
+                        return "SKIPPED: no non-player faction in this world to evaluate placement against";
+                    }
 
                     // Find a tile the strict rules actually refuse. Without one the case proves
                     // nothing, so say so rather than passing on a vacuous comparison.
