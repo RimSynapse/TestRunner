@@ -104,6 +104,7 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(ArrivalMemoryContractCases.All());
                 cases.AddRange(DeferredEventsIntegrationCases.All());
                 cases.AddRange(NightlyReviewCases.All());
+                cases.AddRange(SaveCompatCases.All());
                 cases.AddRange(StandaloneBugCases.All());
                 cases.AddRange(DebugCommandCases.All());
                 cases.AddRange(RedesignScenarioCases.All());
