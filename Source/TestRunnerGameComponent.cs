@@ -81,6 +81,7 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(CallbackCases.All());
                 cases.AddRange(ActionExecutorCases.All());
                 cases.AddRange(ScriptToolStepCases.All());
+                cases.AddRange(StorytellerVocabularyCases.All());
                 cases.AddRange(AdaptiveTierCases.All());
                 cases.AddRange(AgentBudgetCases.All());
                 cases.AddRange(ToolSearchCases.All());
