@@ -83,6 +83,11 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(ScriptToolStepCases.All());
                 cases.AddRange(StorytellerVocabularyCases.All());
                 cases.AddRange(DifficultyContextCases.All());
+                cases.AddRange(IncidentSelectionCases.All());
+                cases.AddRange(TwoAgentCases.All());
+                cases.AddRange(IncidentLifecycleCases.All());
+                cases.AddRange(WorldHistoryCases.All());
+                cases.AddRange(MemoryLinkageCases.All());
                 cases.AddRange(AdaptiveTierCases.All());
                 cases.AddRange(AgentBudgetCases.All());
                 cases.AddRange(ToolSearchCases.All());
@@ -122,6 +127,12 @@ namespace RimSynapse.TestRunner
                 cases.AddRange(WorldNewsBridgeCases.All());
                 // Read-only: the expanded NewspaperIssue model + parse path.
                 cases.AddRange(WorldNewsIssueModelCases.All());
+                // Pure: the world-map change feed's detector rules and bounded/deduped buffer.
+                cases.AddRange(WorldNewsFeedCases.All());
+                // Pure + structural: quest-outcome news rules and the Quest.End hook binding.
+                cases.AddRange(WorldNewsQuestCases.All());
+                // Pure: settlement-affair adjudication + the bounded/decaying short-term relation ledger.
+                cases.AddRange(WorldNewsAffairCases.All());
                 SynapseTestReporter.Info($"Running {cases.Count} case(s).");
                 SynapseTestRunner.RunAll(cases);
             }
