@@ -79,16 +79,26 @@ namespace RimSynapse.TestRunner
 
             yield return new SynapseTestCase("Core_CoreMutatorsAreFlagged", () => WithSettings(s =>
             {
-                // execute_game_tool matters most: unflagged, it would launder any mutation.
+                // The COMPLETE manifest (Core#101) — execute_game_tool matters most:
+                // unflagged, it would launder any mutation through the gate.
                 var flagged = SynapseToolRegistry.AllTools
                     .Where(t => t.isMutating).Select(t => t.name).ToList();
-                foreach (var name in new[] { "possess_colonist", "damage_self_with_equipped", "execute_game_tool" })
+                foreach (var name in new[]
+                {
+                    "possess_colonist", "damage_self_with_equipped", "modify_pawn_state",
+                    "execute_game_tool", "fire_incident", "send_notification_letter",
+                    "modify_object_state", "control_turret", "fire_weapon_at_cell",
+                    "trigger_colonist_break", "attempt_remote_hack", "spawn_hacker_base",
+                    "set_game_volume",
+                })
                 {
                     Assert.True(flagged.Contains(name), $"'{name}' must be flagged as mutating");
                 }
                 Assert.False(flagged.Contains("get_stored_result"),
                     "read-only tools must not be flagged");
-                return $"{flagged.Count} tools flagged, launder path closed";
+                Assert.False(flagged.Contains("write_debugger_log"),
+                    "write_debugger_log is deliberately exempt (diagnostic-only)");
+                return $"{flagged.Count} tools flagged, launder path closed, manifest complete";
             }));
 
             yield return new SynapseTestCase("Core_ScriptAbort", () => WithSettings(s =>
