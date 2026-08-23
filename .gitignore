@@ -1,3 +1,6 @@
 # Build intermediates (the built DLL in Assemblies/ IS committed, matching the other mods)
 Source/obj/
 Source/bin/
+
+# Built assemblies ship as release zip assets, never in git (Core#110)
+Assemblies/*.dll

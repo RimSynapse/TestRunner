@@ -1,0 +1,5 @@
+# RimSynapse TestRunner — shipped assembly manifest
+# version: 0.7.0
+# commit:  2cae083
+# format:  sha256sum — verify with 'verify-binaries.ps1' or 'sha256sum -c'
+ca3d9deef6ed8360203215bc07a4c2434d36a8b137fe716b5af76830bb9332cf  RimSynapseTestRunner.dll
